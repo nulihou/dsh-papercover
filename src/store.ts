@@ -172,17 +172,59 @@ export function filterProjects(all: ResearchProject[], query: ProjectQuery): Res
   return [...out].sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-/** Union of all tags across papers (sorted, deduped). */
+/** Compare labels ignoring case and inner spaces. */
+export function foldLabel(value: string): string {
+  return value.trim().replace(/\s+/g, '').toLowerCase();
+}
+
+/**
+ * True when two labels are the same topic: equal, or the shorter one is a
+ * prefix of the longer one (Zotero often imports both 「小目标」 and 「小目标识别」).
+ */
+export function labelsOverlap(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const short = a.length < b.length ? a : b;
+  const long = a.length < b.length ? b : a;
+  if (short.length < 4) return false;
+  if (!long.startsWith(short)) return false;
+  return short.length / long.length >= 0.6;
+}
+
+/** Drop blank, case-duplicate, and prefix-duplicate labels. Keeps the longer name. */
+export function collapseLabels(labels: string[]): string[] {
+  const kept: string[] = [];
+  for (const raw of labels) {
+    const label = raw.trim();
+    const key = foldLabel(label);
+    if (!key) continue;
+    const same = kept.findIndex((item) => foldLabel(item) === key);
+    if (same >= 0) {
+      if (label.length > kept[same].length) kept[same] = label;
+      continue;
+    }
+    const covered = kept.some((item) => labelsOverlap(foldLabel(item), key) && foldLabel(item).length >= key.length);
+    if (covered) continue;
+    for (let i = kept.length - 1; i >= 0; i--) {
+      const itemKey = foldLabel(kept[i]);
+      if (labelsOverlap(itemKey, key) && key.length > itemKey.length) kept.splice(i, 1);
+    }
+    kept.push(label);
+  }
+  return kept;
+}
+
+/** Union of all tags across papers (sorted, prefix-collapsed). */
 export function allPaperTags(papers: Iterable<Paper>): string[] {
-  const set = new Set<string>();
-  for (const p of papers) for (const tag of p.tags) set.add(tag);
-  return [...set].sort((a, b) => a.localeCompare(b));
+  const flat: string[] = [];
+  for (const p of papers) flat.push(...(p.tags ?? []));
+  return collapseLabels(flat).sort((a, b) => a.localeCompare(b, 'zh'));
 }
 
 export function allCardTags(cards: Iterable<IdeaCard>): string[] {
-  const set = new Set<string>();
-  for (const c of cards) for (const tag of c.tags) set.add(tag);
-  return [...set].sort((a, b) => a.localeCompare(b));
+  const flat: string[] = [];
+  for (const c of cards) flat.push(...(c.tags ?? []));
+  return collapseLabels(flat).sort((a, b) => a.localeCompare(b, 'zh'));
 }
 
 /**
@@ -468,6 +510,7 @@ export class PaperStore {
           this.collections.set(c.id, c);
         }
       }
+      await this.collapseDuplicateCollections();
     } catch { /* first run or corrupt — start empty */ }
 
     try {
@@ -709,13 +752,60 @@ export class PaperStore {
     return this.withLock(() => this.upsertCollectionUnlocked(name, color));
   }
 
+  /** Existing collection with the same name, or a shorter/longer prefix of it. */
+  private findOverlappingCollection(name: string): PaperCollection | undefined {
+    const key = foldLabel(name);
+    const list = this.listCollections();
+    return list.find((c) => foldLabel(c.name) === key)
+      ?? list.find((c) => labelsOverlap(foldLabel(c.name), key));
+  }
+
+  /**
+   * Merge collections that name the same topic. Papers move onto the longer name.
+   * Runs once at startup so Zotero prefix pairs do not stay as two rows.
+   */
+  private async collapseDuplicateCollections(): Promise<void> {
+    const sorted = this.listCollections().sort((a, b) => foldLabel(b.name).length - foldLabel(a.name).length);
+    const used = new Set<string>();
+    let changed = false;
+    for (const keeper of sorted) {
+      if (used.has(keeper.id)) continue;
+      used.add(keeper.id);
+      const key = foldLabel(keeper.name);
+      const drops = sorted.filter((c) => !used.has(c.id) && labelsOverlap(key, foldLabel(c.name)) && foldLabel(c.name).length <= key.length);
+      if (drops.length === 0) continue;
+      const dropIds = new Set(drops.map((c) => c.id));
+      for (const drop of drops) used.add(drop.id);
+      for (const paper of [...this.papers.values()]) {
+        const ids = paper.collectionIds ?? [];
+        if (!ids.some((id) => dropIds.has(id))) continue;
+        const collectionIds = [...new Set(ids.map((id) => (dropIds.has(id) ? keeper.id : id)))];
+        const next: Paper = { ...paper, collectionIds, updatedAt: Date.now() };
+        this.rememberPaper(next);
+        await this.atomicWrite(this.paperPath(paper.id), next);
+      }
+      for (const id of dropIds) this.collections.delete(id);
+      changed = true;
+    }
+    for (const paper of [...this.papers.values()]) {
+      const tags = collapseLabels(paper.tags ?? []);
+      const same = tags.length === (paper.tags ?? []).length && tags.every((tag, i) => tag === paper.tags[i]);
+      if (same) continue;
+      const next: Paper = { ...paper, tags, updatedAt: Date.now() };
+      this.rememberPaper(next);
+      await this.atomicWrite(this.paperPath(paper.id), next);
+    }
+    if (changed) await this.saveCollectionsJson();
+  }
+
   private async upsertCollectionUnlocked(name: string, color?: string): Promise<{ collection: PaperCollection; existed: boolean }> {
     const key = name.trim();
     if (!key) throw new Error('分区名称不能为空');
-    const hit = this.listCollections().find((c) => c.name.toLowerCase() === key.toLowerCase());
+    const hit = this.findOverlappingCollection(key);
     const now = Date.now();
     if (hit) {
-      const next: PaperCollection = { ...hit, color: color ?? hit.color, updatedAt: now };
+      const name = foldLabel(key).length > foldLabel(hit.name).length ? key : hit.name;
+      const next: PaperCollection = { ...hit, name, color: color ?? hit.color, updatedAt: now };
       this.collections.set(hit.id, next);
       await this.saveCollectionsJson();
       return { collection: next, existed: true };

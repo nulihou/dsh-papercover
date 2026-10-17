@@ -414,18 +414,15 @@ async function pullAll(ctx: {
     let col: PaperCollection | undefined;
     if (mapped) col = store.collections.get(mapped.scholarId);
     if (!col) {
-      col = [...store.collections.values()].find((c) => c.name.toLowerCase() === name.toLowerCase());
-    }
-    if (!col) {
       const created = await store.upsertCollection(name);
       col = created.collection;
-      result.pulled.collections++;
-    } else if (col.name !== name || col.zoteroKey !== key) {
-      const next = await store.patchCollection(col.id, {
-        name, zoteroKey: key, zoteroVersion: version, updatedAt: now,
-      });
+      if (!created.existed) result.pulled.collections++;
+    } else if (col.name !== name && name.length > col.name.length) {
+      const next = await store.patchCollection(col.id, { name, updatedAt: now });
       col = next ?? col;
-      result.pulled.collections++;
+    } else if (!col.zoteroKey) {
+      const next = await store.patchCollection(col.id, { zoteroKey: key, zoteroVersion: version, updatedAt: now });
+      col = next ?? col;
     }
     keyToColId.set(key, col.id);
     upsertEntry(map, {
