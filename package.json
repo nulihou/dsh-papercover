@@ -1,0 +1,85 @@
+{
+  "name": "dsh-papercover",
+  "version": "0.3.3",
+  "description": "dsh-papercover: paper library, close reading, comparison, and notes",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./client": "./dist/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-cordis-client-runner",
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "scripts": {
+    "prepack": "npm run build",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json && tsdown && node scripts/wrap-client.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:client": "tsc -p tsconfig.client.json --noEmit",
+    "smoke": "node scripts/smoke-test.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-credentials": "^0.1.5-rc.2 || 0.1.7-rc.2 || 0.2.1-rc.2 || ^0.2.0-0",
+    "@deepseek-ai/dsh-host-webserver": "^0.1.5-rc.2 || 0.1.7-rc.2 || 0.2.1-rc.2 || ^0.2.0-0",
+    "@deepseek-ai/dsh-settings": "^0.1.5-rc.2 || 0.1.7-rc.2 || 0.2.1-rc.2 || ^0.2.0-0",
+    "@deepseek-ai/dsh-tools": "^0.1.5-rc.2 || 0.1.7-rc.2 || 0.2.1-rc.2 || ^0.2.0-0",
+    "schemastery": "^3.18.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-credentials": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-host-webserver": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-settings": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2",
+    "@types/node": "^22.10.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "puppeteer-core": "^25.8.0",
+    "schemastery": "^3.18.0",
+    "tsdown": "^0.22.14",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "paper-library",
+    "arxiv",
+    "knowledge-graph",
+    "research",
+    "zotero-like",
+    "idea-cards"
+  ],
+  "author": "hmy2022 <houwork2022@163.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nulihou/dsh-papercover.git"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38",
+    "qrcode": "^1.5.4"
+  }
+}
