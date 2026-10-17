@@ -2,13 +2,31 @@
 
 [English](README.md) | [简体中文](README.zh.md)
 
-Paper library and close-reading workspace for [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh). Keep papers, PDFs, reading reports, questions, idea cards, and a knowledge graph in one sidebar.
+A paper workbench for [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh). Collect a paper, read it against the PDF, keep the claim, turn it into a card, attach it to a project, and connect it on the graph, all from the sidebar. The chat can pick up any of those steps.
 
 A fresh install is empty. This repository and the release archive contain the plugin only. They do not include papers, PDFs, notes, reports, API keys, or anyone's library. After you install it, your own files are created on your machine, under the archive directory you choose in settings. The default directory is `~/Documents/ResearchPapers`, and it starts empty.
 
 ## Main screen
 
 ![Library](docs/main.png)
+
+## Highlights
+
+**It sits next to the chat.** Four pages live in the sidebar: Library, Graph, Cards, and Projects. Say “save this paper”, “read this closely”, or “turn the idea into a card”, and the agent files it, starts the reading, or creates the card. Close reading runs in the background, so the current chat stays free.
+
+**A close reading you can check.** Three depths: full, light, and skim. A report keeps claims, evidence, experiments, figures, and limits. Each item is marked as a statement from the paper, an experimental number, a reader inference, or not enough material, and it links back to a page. Later questions use the saved text and come back with page sources. Compare 2–10 papers at once. Papers that already have a report can be compared again without a reread. You can also aim a pass at method, experiments, attribution, limits, or whether the idea transfers.
+
+**The PDF stays in the sidebar.** Highlights, notes, word translation, and a page outline. A highlighted sentence jumps back to its page.
+
+**The library is arranged like a reading list.** Collections, a queue (want to read / reading / done), a lifecycle from inbox to cited, tags, years, and saved filters. Paste an arXiv link or a DOI and the record fills in. Related papers, citations, and references come from OpenAlex. Copy a citation as GB/T 7714, APA 7, or BibTeX, or export the whole library as `.bib`.
+
+**A paper can grow into a project.** A card holds the idea, one plain sentence, the steps, and the evidence. When you want to try it, the same card becomes a checkable hypothesis: question, modules to change, dataset, baseline, metrics, risks, and result. Evidence is its own record, attached to a paper, a card, or a project. A project gathers the papers, the evidence, the cards, and the problems still open.
+
+**Ask the graph who used a method.** Papers and concepts connect as proposes, improves, builds on, uses, compares, or cites. Tags can sketch the first layer. The chat can add the semantic links after that.
+
+**It meets Zotero and Obsidian where they already are.** Two-way sync with Zotero Desktop covers papers, collections, PDFs, notes, cards, and highlights. Steps are in [Zotero](#zotero). Notes and highlights can also be written into an Obsidian vault as Markdown, with YAML front matter and quoted passages.
+
+Your files stay on your computer. The plugin collects no usage data of its own. Scanned PDFs without a text layer cannot be read. This plugin does not run OCR. Check model-written page numbers and claims against the PDF.
 
 ## Install
 
@@ -31,20 +49,6 @@ dsh plugin --profile web add .
 ```
 
 Quit DeepSeek Harness completely and open it again after installing or upgrading. Prefer a clone path that contains no spaces.
-
-## What you can do
-
-- Save papers by hand, or ask the agent to call `paper_save`. arXiv ids, DOIs, and titles are used to spot duplicates.
-- Upload a local PDF, or download the PDF for an arXiv paper. The upload limit is 50MB per file.
-- Read in the sidebar: highlights, notes, word translation, and page outline.
-- Run a close reading, a lighter synthesis, or a skim. Reports keep claims, evidence, experiments, figures, limits, and page links.
-- Ask follow-up questions against the saved paper text.
-- Compare several papers.
-- Keep idea cards and a knowledge graph of papers, concepts, and ideas.
-- Copy citations as GB/T 7714, APA, or BibTeX.
-- Sync both ways with Zotero Desktop. See [Zotero](#zotero).
-
-Scanned PDFs without a text layer cannot be read. This plugin does not run OCR. Check model-written page numbers and claims against the PDF.
 
 ## Zotero
 
