@@ -6,6 +6,18 @@ Paper library and close-reading workspace for [DeepSeek Harness](https://www.npm
 
 A fresh install is empty. This repository and the release archive contain the plugin only. They do not include papers, PDFs, notes, reports, API keys, or anyone's library. After you install it, your own files are created on your machine, under the archive directory you choose in settings. The default directory is `~/Documents/ResearchPapers`, and it starts empty.
 
+The pictures below use stand-in titles (`合成论文`), not a real library.
+
+## Main screens
+
+| Library | Paper |
+|---|---|
+| ![Library](docs/library.png) | ![Paper](docs/paper.png) |
+
+| Notes | Graph |
+|---|---|
+| ![Notes](docs/notes.png) | ![Graph](docs/graph.png) |
+
 ## Install
 
 Requires DeepSeek Harness and Node.js 20 or newer.
