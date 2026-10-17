@@ -10,6 +10,14 @@ A fresh install is empty. This repository and the release archive contain the pl
 
 ![Library](docs/main.png)
 
+Opening a paper keeps the record, reading state, close reading, PDF, and study card on one page.
+
+![Paper](docs/paper.png)
+
+The PDF opens in the sidebar, with paging, fit-to-width, outline, search, and evidence.
+
+![PDF](docs/pdf.png)
+
 ## Highlights
 
 **It sits next to the chat.** Four pages live in the sidebar: Library, Graph, Cards, and Projects. Say “save this paper”, “read this closely”, or “turn the idea into a card”, and the agent files it, starts the reading, or creates the card. Close reading runs in the background, so the current chat stays free.
